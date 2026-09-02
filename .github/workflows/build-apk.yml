@@ -1,0 +1,39 @@
+name: Build Cleaning Master Hub APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract Android project
+        run: |
+          mkdir project
+          unzip -q CleaningMasterHub_Android_Project.zip -d project
+
+      - name: Find project
+        run: |
+          PROJECT_DIR=$(dirname "$(find project -name settings.gradle -print -quit)")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+      - name: Install Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+          echo "$PWD/gradle-8.7/bin" >> "$GITHUB_PATH"
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cleaning-Master-Hub-APK
+          path: "**/build/outputs/apk/debug/*.apk"
